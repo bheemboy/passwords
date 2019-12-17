@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+<link rel="icon" type="image/gif" href="favicon.gif">
+	  
+<html>
+
+<head>
+  <title></title>
+</head>
+
+<script src="aes.js">/* AES JavaScript implementation */</script>
+<script src="aes-ctr.js">/* AES Counter Mode implementation */</script>
+
+<script src="base64.js">/* Base64 encoding */</script>
+<script src="utf8.js">/* UTF-8 encoding */</script>
+
+<script language="JavaScript" type="text/javascript">
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
+function byteArrayToHexStr(b) {  // convert byte array to hex string for displaying test vectors
+  var s = '';
+  for (var i=0; i<b.length; i++) s += b[i]<0x10 ? '0'+b[i].toString(16)+' ' : b[i].toString(16)+' ';
+  return s;
+}
+
+String.prototype.toCodes = function() {
+  if (this.length == 0) return '';
+  var arr = this.split('');
+  for (a in arr) arr[a] = arr[a].charCodeAt(0);
+  return arr.join(':');
+}
+
+function verifyKeyExpansion() {
+  var cipher = [0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 
+                0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c];
+  alert('128: '+keyScheduleToHexStr(Aes.keyExpansion(cipher)));
+  var cipher = [0x8e, 0x73, 0xb0, 0xf7, 0xda, 0x0e, 0x64, 0x52, 
+                0xc8, 0x10, 0xf3, 0x2b, 0x80, 0x90, 0x79, 0xe5, 
+                0x62, 0xf8, 0xea, 0xd2, 0x52, 0x2c, 0x6b, 0x7b];
+  alert('192: '+keyScheduleToHexStr(Aes.keyExpansion(cipher)));
+  var cipher = [0x60, 0x3d, 0xeb, 0x10, 0x15, 0xca, 0x71, 0xbe, 
+                0x2b, 0x73, 0xae, 0xf0, 0x85, 0x7d, 0x77, 0x81, 
+                0x1f, 0x35, 0x2c, 0x07, 0x3b, 0x61, 0x08, 0xd7, 
+                0x2d, 0x98, 0x10, 0xa3, 0x09, 0x14, 0xdf, 0xf4];
+  alert('256: '+keyScheduleToHexStr(Aes.keyExpansion(cipher)));
+}
+
+function keyScheduleToHexStr(keySchedule) {  // return expanded key as hex words, as per FIPS-197§A
+  var d = '';
+  for (w=0; w<keySchedule.length; w++) {
+    for (var b=0; b<4; b++) {
+      var byte = keySchedule[w][b];
+      d += byte<0x10 ? '0'+byte.toString(16) : byte.toString(16);
+    }
+    d += ' ';
+  }
+  return d;
+}
+
+var browserName=navigator.appName; 
+var srcFrame;
+var globalvar;
+
+function handleKeyPress(e,form)
+{
+  var key=e.keyCode || e.which;
+  if (key==13)
+  {
+    decode();
+    if (browserName=="Microsoft Internet Explorer")
+    {
+      event.cancelBubble = true;
+      event.returnValue = false;
+    }
+    return false;
+  }
+  return true;
+}
+
+function decode()
+{
+  inpdata=window.document.blcoder.blinptext.value;
+  passwd=window.document.blcoder.blpassword.value;
+  window.document.blcoder.blinptext.value=Aes.Ctr.decrypt(inpdata, passwd, 256);
+}
+
+function encode() {
+  inpdata=window.document.blcoder.blinptext.value;
+  passwd=window.document.blcoder.blpassword.value;
+  window.document.blcoder.blinptext.value = Aes.Ctr.encrypt(inpdata, passwd, 256)
+}
+
+//External content into a layer
+function loadOuter(doc) 
+{
+ srcFrame = document.getElementById("hiddenContent");
+ srcFrame.src = doc;
+}
+
+
+function transferHTML()
+{
+ srcContent='';
+ if (srcFrame.contentDocument)
+ {
+  var hasInnerText = (document.getElementsByTagName("body")[0].innerText != undefined) ? true : false;
+  if(!hasInnerText)
+  {
+    srcContent=srcFrame.contentDocument.getElementsByTagName("BODY")[0].textContent;
+  }
+  else
+  {
+    srcContent=srcFrame.contentDocument.getElementsByTagName("BODY")[0].innerText;
+  }
+ }
+ else if (srcFrame.contentWindow)
+ {
+  var hasInnerText = (srcFrame.contentWindow.document.body.innerText != undefined) ? true : false;
+  if(!hasInnerText)
+  {
+    srcContent=srcFrame.contentWindow.document.body.textContent;
+  }
+  else
+  {
+    srcContent=srcFrame.contentWindow.document.body.innerText;
+  }
+ }
+ window.document.blcoder.blinptext.value = srcContent;
+ globalvar = window.document.blcoder.blpassword;
+ setTimeout("globalvar.focus()",250);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
+</script>
+
+<body onload="loadOuter('passwords.txt');">
+<br>
+
+  <form name="blcoder">
+    <table cellspacing="0" cellpadding="3">
+      <tr>
+        <td>
+	  Password:
+	</td>
+      </tr>
+      <tr>
+        <td>
+	  <input name="blpassword" size=56 type="password" onkeypress="return handleKeyPress(event,this.form);">
+	  <input type=button value="Decode" onClick="decode();">
+	  <input type=button value="Encode" onClick="encode();">
+	</td>
+      </tr>
+      <tr>
+        <td>
+          <textarea id="blinptext" name="blinptext" rows=35 cols=80></textarea>
+        </td>
+      </tr>
+    </table>
+  </form>
+
+<iframe  id="hiddenContent" width="200" height="200" style="position:absolute;visibility:hidden;" onload="transferHTML();">Loading...</iframe>
+
+</body>
+
+</html>
+
